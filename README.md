@@ -33,7 +33,7 @@ hostp
 ```
 The first time you run it, you'll be prompted to enter the file name you want to host (e.g., index.html or index.php).
 ### 5. Exiting the Interactive Prompt
-After running, pressing Ctrl+C to exit the script.
+After running, pressing Ctrl+C to exit the script. But only exit you from script but the server Runs in background 
 
 ### ​6. Killing the Running Server
 ​The server is designed to run in the background even if you close Termux. To stop it, use the specific kill command:
