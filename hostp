@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# --- CONFIGURATION ---
+PID_FILE="$HOME/php_hoster.pid"
+SERVER_HOST_PORT="localhost:8080"
+# --- END CONFIGURATION ---
+
+# Function to kill the server
+kill_server() {
+    if [[ -f "$PID_FILE" ]]; then
+        SERVER_PID=$(cat "$PID_FILE")
+
+        # Check if the process is actually running using 'ps'
+        if ps -p "$SERVER_PID" > /dev/null; then
+            echo -e "\033[33m\t\t⟨ Attempting to kill Server (PID: $SERVER_PID) ⟩\033[0m"
+            kill -9 "$SERVER_PID" 2>/dev/null
+            sleep 1
+        fi
+
+        rm -f "$PID_FILE"
+        echo -e "\033[31m\t\t⟨ Cleanup Complete ⟩\033[0m"
+        return 0
+    else
+        echo -e "\033[33m\t\t⟨ No running server detected via PID file. ⟩\033[0m"
+        return 1
+    fi
+}
+
+# --- EXPLICIT KILL COMMAND HANDLER ---
+if [[ "$1" == "kill" ]]; then
+    kill_server
+    exit 0
+fi
+
+# Trap: Ensures the server is killed if the script is terminated unexpectedly
+trap kill_server EXIT
+
+# --- MAIN EXECUTION ---
+echo ""
+echo -e "\033[31m\t⟨\033[32m Always Kill The Server When You're Done!!\033[31m ⟩\033[0m"
+echo -e "\033[1;31m"
+echo -e "\t\t ░█░█░█▀█░█▀▀░▀█▀░█▀█░█░█░█▀█"
+echo -e "\t\t ░█▀█░█░█░▀▀█░░█░░█▀▀░█▀█░█▀▀"
+echo -e "\t\t ░▀░▀░▀▀▀░▀▀▀░░▀░░▀░░░▀░▀░▀░░V7.0"
+echo -e "\t\t⟨ Run \033[1;35mhostp kill\033[31m to force kill the server ⟩\033[0m"
+echo -e "\t\t\t\033[1;31m⟨ Run \033[1;35mCtrl+c\033[31m to exit program⟩\033[0m"
+
+
+# --- 1. Check for Running Server ---
+if [[ -f "$PID_FILE" ]]; then
+    SERVER_PID=$(cat "$PID_FILE")
+
+    # Check if the PID is actually an active process
+    if ps -p "$SERVER_PID" > /dev/null; then
+        echo -e "\033[33m\t\t⟨ A Server is already running (PID: $SERVER_PID) ⟩\033[0m"
+        read -p $'\e[33m   ⟨Type "\e[1;35mk\e[33m" to kill Server, or "\e[1;35mn\e[33m" to Exit: \e[0m' kill_choice
+
+        if [[ "$kill_choice" == "k" ]]; then
+            kill_server
+            exit 0
+        else
+            echo -e "\033[31mExiting the program.\033[0m"
+            exit 0
+        fi
+    else
+        # Stale PID file found. Clean up and continue to the loop.
+        echo -e "\033[33m\t\t⟨ Stale PID file found. Cleaning up... ⟩\033[0m"
+        rm -f "$PID_FILE"
+    fi
+fi
+
+# --- 2. Start New Server Loop ---
+while true; do
+
+    # CHANGED: The loop restarts here on errors/cancellation
+    read -p $'\e[1;32mEnter File Name:\e[34m ' hostp
+
+    # Input validation: check for valid extensions
+    if [[ ! "$hostp" =~ \.(php|html|htm)$ ]]; then
+        echo -e "\033[31mError:Invalid file name."
+        echo -e "\033[31mValid Example: index.html or index.php\033[0m\n"
+        continue # Restart the loop for a new input
+    fi
+
+    # Check if the file actually exists
+    if [[ ! -f "$hostp" ]]; then
+        echo -e "\033[31mError: File '$hostp' not found in the current directory."
+        continue # Restart the loop for a new input
+    fi
+
+    # If both checks pass, exit the loop to proceed to hosting
+    break
+
+done
+
+echo ""
+read -p $'\e[1;32mHost the server now (y/n):\e[34m ' host
+
+if [[ "$host" == "y" ]]; then
+
+    # Start the server and capture PID
+    setsid sh -c "php -S $SERVER_HOST_PORT -t . > /dev/null 2>&1" &
+    SERVER_PID=$!
+    echo "$SERVER_PID" > "$PID_FILE"
+    disown -h %1 2>/dev/null
+
+    echo -e "\033[32mServer started successfully (PID: $SERVER_PID). Opening browser...\033[0m"
+    am start -a android.intent.action.VIEW -d "http://127.0.0.1:8080/$hostp"
+
+    # Unset the trap and EXIT the script, leaving the server running.
+    trap - EXIT
+    echo -e "\033[31mScript exiting. Server remains LIVE until killed.\033[0m"
+    exit 0
+else
+    echo -e "\033[31mServer not started."
+    echo -e "Exiting the program\033[0m"
+    exit 0
+fi
