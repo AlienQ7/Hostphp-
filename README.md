@@ -6,6 +6,11 @@ This utility is very handy if you're doing some kind of **web development** from
 
 ## 🛠 Setup
 
+### Core Tool Installation
+we need to install php as this script depend on php,we can use other like python but for storage reason ,php is choosen.
+```bash
+pkg install php
+```
 ### 1. Navigate to the `bin` directory
 
 This ensures the script is placed where Termux looks for global commands.
