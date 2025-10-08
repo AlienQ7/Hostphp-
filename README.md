@@ -22,7 +22,7 @@ cd $PREFIX/bin
 ### 2. Create the script file (hostp)
 ​Use a text editor (like nano) to create and open the new file.
 ```bash
-cd hostp
+nano hostp
 ```
 ​Note: Paste the content of your hostp script into this file, then save and exit nano.
 
